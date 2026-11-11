@@ -33,7 +33,10 @@ export type Cx = {
     clipboard_text: () -> (string?, string?, number?),
     set_clipboard_text: (text: string) -> (true?, string?, number?),
     set_clipboard_image: (png: string | buffer) -> (true?, string?, number?),
+    keep_awake: (awake: Awake) -> (true?, string?, number?),
     save_file: (window: WindowId?, name: string, bytes: string | buffer) -> (number?, string?, number?),
+    packages: (call: Packages) -> (number?, string?, number?),
+    cancel_packages: (job: number) -> (true?, string?, number?),
     focused_window: () -> (WindowId?, string?, number?),
     focused_pane: () -> (PaneId?, string?, number?),
     selection_text: (pane: PaneId) -> (string?, string?, number?),
@@ -148,6 +151,8 @@ export type Event =
     | { kind: "tab-bar-resized", width: number }
     | { kind: "answered", id: number, text: string? }
     | { kind: "saved", id: number, path: string?, error: string? }
+    | { kind: "package", id: number, line: Data }
+    | { kind: "packages-ended", id: number, ok: boolean }
     | { kind: "config-changed" }
     | { kind: "timer", id: number }
     | { kind: "custom", name: string, schema: string, value: Data }
@@ -234,7 +239,8 @@ export type TestHost = {
     events: (events: { Event }) -> (),
     -- Gives it the event of a node of one of its views.
     ui_event: (event: UiEvent) -> (),
-    -- Its tree of `view`, as it renders it, if it renders one.
+    -- Its tree of `view`, as it renders it, if it renders one; a render that fails, or a tree that the host
+    -- refuses, as a titlebar button that is none, raises its error.
     render: (view: ViewId) -> Node?,
     -- The ids of its panels that show, in their order.
     panels: () -> { PanelId },
@@ -273,6 +279,19 @@ export type TestHost = {
     -- The ids of the images that the host keeps of the plugin's, the oldest
     -- first.
     kept_images: () -> { number },
+    -- What the plugin keeps from idle sleep.
+    awake: () -> Awake,
+    -- The focused window, and the tab that it shows.
+    window: () -> WindowId,
+    tab: () -> TabId,
+    -- Opens a tab after the focused window's others, as the user opens one; the plugin hears of it.
+    open_tab: () -> TabId,
+    -- Gives the tab `tab`, or the focused window's, the marks `marks` that a read of the tabs tells, as of a
+    -- program that runs in it, `running`; the plugin hears `tab-changed` as they change.
+    set_tab_marks: (marks: { activity: boolean?, bell: boolean?, printing: boolean?, running: boolean?,
+        alternate: boolean?, secure: boolean? }, tab: TabId?) -> (),
+    -- Its items of the menus, in their order.
+    menu_items: () -> { MenuItem },
 }
 
 export type AgentState =
@@ -294,6 +313,11 @@ export type Anchor =
     | { pane_corner: { pane: PaneId, corner: Corner } }
     | { pane_top: PaneId }
     | { window_corner: { window: WindowId, corner: Corner } }
+
+export type Awake =
+    | "off"
+    | "system"
+    | "display"
 
 export type BarPlace =
     | "titlebar"
@@ -495,6 +519,8 @@ export type MenuItem = {
     command: string,
     args: { [string]: Value }?,
     title: string?,
+    submenu: string?,
+    ticked: boolean?,
 }
 
 export type MenuPlace =
@@ -531,6 +557,14 @@ export type NodeRole =
     | "alert"
     | "heading"
     | "image"
+
+export type Packages =
+    | "list"
+    | { search: { query: string } }
+    | { info: { plugin: string } }
+    | { add: { plugin: string, constraint: string? } }
+    | { update: { plugin: string? } }
+    | { remove: { plugin: string } }
 
 export type PaneId = number
 
@@ -793,6 +827,7 @@ export type ViewId =
     | { window_strip: WindowId }
     | { status_bar: WindowId }
     | { pane_header: PaneId }
+    | { title_buttons: WindowId }
     | { panel: PanelId }
 
 export type Viewport = {

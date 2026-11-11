@@ -2,7 +2,7 @@
 name = "sephiroth74/snap"
 version = "0.1.0"
 kind = "luau"
-api = "^0.1"
+api = "^0.1.1"
 license = "MIT"
 description = "An image of a terminal's text, in a frame as a macOS window's, to copy or to save"
 repository = "https://github.com/sephiroth74/sleip-snap"
