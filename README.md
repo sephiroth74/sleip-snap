@@ -32,7 +32,7 @@ In Lokyr's `config.toml`, under `[plugins.snap]`:
 | `rounded-corners` | `true`, `false` | `true` | The window's corners rounded, or square |
 | `window-controls` | `true`, `false` | `true` | The window's three buttons |
 | `title` | `true`, `false` | `true` | The pane's title in the window's bar, as its tab shows it |
-| `title-text` | a text | none | The title where the pane gives none |
+| `title-text` | a text | the pane's | The window's title, in place of the pane's |
 | `target` | `container`, `window` | `container` | The window with what is around it, or the window alone |
 | `min-columns` | 1 to 1000 | the selection's | The least columns of a selection's window |
 | `min-rows` | 1 to 1000 | the selection's | The least rows of a selection's window |
@@ -43,8 +43,8 @@ In Lokyr's `config.toml`, under `[plugins.snap]`:
 
 - `terminal-read`, for the cells of the selection and of the screen.
 - `process-read`, for the pane's title as its tab shows it, of its folder
-  and its program; refused, the title is the program's own, or
-  `title-text`.
+  and its program; refused, the title is the program's own, unless
+  `title-text` gives one.
 - `clipboard-write`, to copy the image.
 
 A save goes through the save panel, where you choose the file: it needs no

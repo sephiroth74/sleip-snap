@@ -45,20 +45,21 @@ function look.trimmed(rows: { CellRow }): { CellRow }
     return kept
 end
 
--- The window's title, where `config` shows one: the pane's, `title`, or
--- else the config's `title-text`; none of an empty one.
+-- The window's title, where `config` shows one: the config's
+-- `title-text`, if it gives one, or else the pane's, `title`; none of an
+-- empty one.
 function look.title(config: Config, title: string?): string?
     if config.title == false then
         return nil
     end
-    local shown = title
-    if shown == nil or shown == "" then
-        shown = config["title-text"]
+    local given = config["title-text"]
+    if type(given) == "string" and given ~= "" then
+        return given
     end
-    if type(shown) ~= "string" or shown == "" then
+    if title == nil or title == "" then
         return nil
     end
-    return shown
+    return title
 end
 
 -- The image of `rows` that `config` asks for, titled `title` where it

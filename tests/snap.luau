@@ -84,13 +84,13 @@ function test.the_image_follows_the_config(host: TestHost)
     assert(plain.shadow == false and plain.buttons == false and plain.rounded == false)
 end
 
-function test.the_title_is_the_pane_s_or_else_the_config_s_text(host: TestHost)
+function test.the_title_is_the_config_s_text_or_else_the_pane_s(host: TestHost)
     assert(look.title({}, "~/lokyr — zsh") == "~/lokyr — zsh")
+    assert(look.title({ ["title-text"] = "Snap Window" }, "~/lokyr — zsh") == "Snap Window")
     assert(look.title({ ["title-text"] = "Lokyr" }, nil) == "Lokyr")
-    assert(look.title({ ["title-text"] = "Lokyr" }, "") == "Lokyr")
+    assert(look.title({ ["title-text"] = "" }, "zsh") == "zsh", "an empty text, the pane's")
     assert(look.title({}, nil) == nil)
     assert(look.title({ title = false, ["title-text"] = "Lokyr" }, "zsh") == nil)
-    assert(look.title({ ["title-text"] = "" }, nil) == nil)
 end
 
 function test.a_selection_takes_the_least_size_and_the_screen_its_own(host: TestHost)

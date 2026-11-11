@@ -41,7 +41,7 @@
       "default": true
     },
     "title-text": {
-      "description": "The window's title where the pane gives none: a program that names none, and Lokyr not allowed to read the panes' processes.",
+      "description": "The window's title, in place of the pane's; none for the pane's.",
       "type": "string",
       "maxLength": 256
     },
