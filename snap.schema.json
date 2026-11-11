@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sephiroth74/snap",
+  "type": "object",
+  "properties": {
+    "background": {
+      "description": "The color around the window, as #rrggbb; none, or another text, for the theme's background, darker.",
+      "type": "string",
+      "maxLength": 7
+    },
+    "transparent-background": {
+      "description": "No background around the window: the image is clear there.",
+      "type": "boolean",
+      "default": false
+    },
+    "shadow": {
+      "description": "A shadow under the window.",
+      "type": "boolean",
+      "default": true
+    },
+    "padding": {
+      "description": "The room around the window, in points.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 256,
+      "default": 32
+    },
+    "rounded-corners": {
+      "description": "The window's corners rounded, or square.",
+      "type": "boolean",
+      "default": true
+    },
+    "window-controls": {
+      "description": "The window's three buttons in its bar.",
+      "type": "boolean",
+      "default": true
+    },
+    "title": {
+      "description": "The pane's title in the window's bar.",
+      "type": "boolean",
+      "default": true
+    },
+    "target": {
+      "description": "The image of the window with what is around it, or of the window alone.",
+      "type": "string",
+      "enum": ["container", "window"],
+      "default": "container"
+    },
+    "action": {
+      "description": "What the shutter does: copies the image, saves it through the save panel, or both.",
+      "type": "string",
+      "enum": ["copy", "save", "both"],
+      "default": "copy"
+    },
+    "scale": {
+      "description": "The pixels of a point of the image; none for the display's.",
+      "type": "integer",
+      "enum": [1, 2, 3]
+    }
+  },
+  "additionalProperties": false
+}

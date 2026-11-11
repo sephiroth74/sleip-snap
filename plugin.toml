@@ -1,0 +1,28 @@
+[plugin]
+name = "sephiroth74/snap"
+version = "0.1.0"
+kind = "luau"
+api = "^0.1"
+license = "MIT"
+description = "An image of a terminal's text, in a frame as a macOS window's, to copy or to save"
+repository = "https://github.com/sephiroth74/snap"
+keywords = ["image", "screenshot", "share"]
+authors = ["Alessandro Crugnola"]
+
+# It activates as one of its commands first runs, which the menus and the
+# palette show before.
+[activation]
+on = ["command:snap.selection", "command:snap.screen"]
+
+# The cells of the selection and of the screen, and the image on the
+# clipboard; a save goes through the save panel, of no capability.
+[capabilities]
+terminal-read = true
+clipboard-write = true
+
+[contributes]
+commands = [
+    { name = "snap.selection", title = "Snap the Selection", category = "edit" },
+    { name = "snap.screen", title = "Snap the Screen", category = "edit" },
+]
+config-schema = "snap.schema.json"
