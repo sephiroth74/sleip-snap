@@ -14,10 +14,12 @@ authors = ["Alessandro Crugnola"]
 [activation]
 on = ["command:snap.selection", "command:snap.screen"]
 
-# The cells of the selection and of the screen, and the image on the
-# clipboard; a save goes through the save panel, of no capability.
+# The cells of the selection and of the screen, the pane's title as its tab
+# shows it, of its folder and its program, and the image on the clipboard;
+# a save goes through the save panel, of no capability.
 [capabilities]
 terminal-read = true
+process-read = true
 clipboard-write = true
 
 [contributes]

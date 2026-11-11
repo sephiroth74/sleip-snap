@@ -40,22 +40,50 @@
       "type": "boolean",
       "default": true
     },
+    "title-text": {
+      "description": "The window's title where the pane gives none: a program that names none, and Lokyr not allowed to read the panes' processes.",
+      "type": "string",
+      "maxLength": 256
+    },
     "target": {
       "description": "The image of the window with what is around it, or of the window alone.",
       "type": "string",
-      "enum": ["container", "window"],
+      "enum": [
+        "container",
+        "window"
+      ],
       "default": "container"
+    },
+    "min-columns": {
+      "description": "The least columns of a selection's window; none for the selection's own.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "min-rows": {
+      "description": "The least rows of a selection's window; none for the selection's own.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
     },
     "action": {
       "description": "What the shutter does: copies the image, saves it through the save panel, or both.",
       "type": "string",
-      "enum": ["copy", "save", "both"],
+      "enum": [
+        "copy",
+        "save",
+        "both"
+      ],
       "default": "copy"
     },
     "scale": {
       "description": "The pixels of a point of the image; none for the display's.",
       "type": "integer",
-      "enum": [1, 2, 3]
+      "enum": [
+        1,
+        2,
+        3
+      ]
     }
   },
   "additionalProperties": false

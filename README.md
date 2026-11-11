@@ -9,12 +9,9 @@ code-snippet tools make of code.
 
 - **Snap the Selection** (`snap.selection`) and **Snap the Screen**
   (`snap.screen`), from the command palette (⇧⌘P) or keys of your own:
-  a preview of the image opens over the window, the text in your theme's
-  colors and your terminal's font.
-- The preview's toggles turn the window's buttons, its title, its shadow,
-  its rounded corners and a transparent background on and off.
-- Its shutter copies the image, saves it through the save panel, or both,
-  as `action` says; Escape or Cancel closes it.
+  the image of the text, in your theme's colors and your terminal's font,
+  is copied, saved through the save panel, or both, as `action` says.
+- The window's parts, its background and its size are the config's.
 
 ## Install
 
@@ -34,14 +31,20 @@ In Lokyr's `config.toml`, under `[plugins.snap]`:
 | `padding` | points, 0 to 256 | `32` | The room around the window |
 | `rounded-corners` | `true`, `false` | `true` | The window's corners rounded, or square |
 | `window-controls` | `true`, `false` | `true` | The window's three buttons |
-| `title` | `true`, `false` | `true` | The pane's title in the window's bar |
+| `title` | `true`, `false` | `true` | The pane's title in the window's bar, as its tab shows it |
+| `title-text` | a text | none | The title where the pane gives none |
 | `target` | `container`, `window` | `container` | The window with what is around it, or the window alone |
+| `min-columns` | 1 to 1000 | the selection's | The least columns of a selection's window |
+| `min-rows` | 1 to 1000 | the selection's | The least rows of a selection's window |
 | `action` | `copy`, `save`, `both` | `copy` | What the shutter does |
 | `scale` | `1`, `2`, `3` | the display's | The pixels of a point |
 
 ## Capabilities
 
 - `terminal-read`, for the cells of the selection and of the screen.
+- `process-read`, for the pane's title as its tab shows it, of its folder
+  and its program; refused, the title is the program's own, or
+  `title-text`.
 - `clipboard-write`, to copy the image.
 
 A save goes through the save panel, where you choose the file: it needs no

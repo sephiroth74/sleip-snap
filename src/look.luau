@@ -1,32 +1,12 @@
 --!strict
--- What an image of cells looks like, of the plugin's config and of the
--- preview's toggles: the frame's parts, the room and what fills it, the
--- rows without the empty ones at their end, and the preview's size.
+-- What an image of cells looks like, of the plugin's config: the frame's
+-- parts, its title, the room and what fills it, a selection's least size,
+-- and the rows without the empty ones at their end.
 
 local look = {}
 
--- The parts of the frame that the preview's toggles turn on and off.
-export type Parts = {
-    buttons: boolean,
-    title: boolean,
-    shadow: boolean,
-    rounded: boolean,
-    transparent: boolean,
-}
-
--- The plugin's config, a table of its keys, its schema's defaults given.
+-- The plugin's config, a table of its keys.
 export type Config = { [string]: any }
-
--- The parts as the config gives them.
-function look.parts(config: Config): Parts
-    return {
-        buttons = config["window-controls"] ~= false,
-        title = config.title ~= false,
-        shadow = config.shadow ~= false,
-        rounded = config["rounded-corners"] ~= false,
-        transparent = config["transparent-background"] == true,
-    }
-end
 
 -- The color of `text`, as `#rrggbb`, its red, green and blue; none of any
 -- other text.
@@ -65,12 +45,28 @@ function look.trimmed(rows: { CellRow }): { CellRow }
     return kept
 end
 
--- The image of `rows` that `config` and `parts` ask for, titled `title`
--- where its part shows, which the host keeps for the preview.
-function look.spec(config: Config, parts: Parts, rows: { CellRow }, title: string?): ImageSpec
+-- The window's title, where `config` shows one: the pane's, `title`, or
+-- else the config's `title-text`; none of an empty one.
+function look.title(config: Config, title: string?): string?
+    if config.title == false then
+        return nil
+    end
+    local shown = title
+    if shown == nil or shown == "" then
+        shown = config["title-text"]
+    end
+    if type(shown) ~= "string" or shown == "" then
+        return nil
+    end
+    return shown
+end
+
+-- The image of `rows` that `config` asks for, titled `title` where it
+-- shows one; of a selection's, `selection`, of its least columns and rows.
+function look.spec(config: Config, rows: { CellRow }, title: string?, selection: boolean): ImageSpec
     local alone = config.target == "window"
     local background: ImageBackground = "theme"
-    if parts.transparent or alone then
+    if config["transparent-background"] == true or alone then
         background = "clear"
     else
         local rgb = look.color(config.background)
@@ -81,24 +77,16 @@ function look.spec(config: Config, parts: Parts, rows: { CellRow }, title: strin
     local padding: number = if alone then 0 else (config.padding or 32)
     return {
         rows = rows,
-        title = if parts.title then title else nil,
-        buttons = parts.buttons,
-        rounded = parts.rounded,
-        shadow = parts.shadow and not alone,
+        title = look.title(config, title),
+        buttons = config["window-controls"] ~= false,
+        rounded = config["rounded-corners"] ~= false,
+        shadow = config.shadow ~= false and not alone,
         padding = padding,
         background = background,
         scale = config.scale,
-        keep = true,
+        min_columns = if selection then config["min-columns"] else nil,
+        min_rows = if selection then config["min-rows"] else nil,
     }
-end
-
--- The size, in points, that shows `image` whole within `width` and
--- `height`, of its own proportions, never larger than its own.
-function look.fit(image: Image, width: number, height: number): (number, number)
-    local own_width = image.width / image.scale
-    local own_height = image.height / image.scale
-    local shrink = math.min(1, width / own_width, height / own_height)
-    return math.floor(own_width * shrink), math.floor(own_height * shrink)
 end
 
 return look
