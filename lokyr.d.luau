@@ -28,6 +28,19 @@ export type Cx = {
     themes: () -> (Themes?, string?, number?),
     preview_theme: (name: string?) -> (true?, string?, number?),
     set_theme: (variant: ThemeVariant, name: string) -> (true?, string?, number?),
+    fonts: () -> (Fonts?, string?, number?),
+    day: () -> (number?, string?, number?),
+    notice_shows: () -> (boolean?, string?, number?),
+    keeps_state: () -> (boolean?, string?, number?),
+    agents: () -> ({ AgentInfo }?, string?, number?),
+    plugins: () -> ({ PluginInfo }?, string?, number?),
+    settings: () -> (Settings?, string?, number?),
+    font_styles: (text: string) -> ({ string }?, string?, number?),
+    set_plugin_enabled: (plugin: string, enabled: boolean) -> (true?, string?, number?),
+    set_setting: (section: string, plugin: string?, key: string, value: Data?) -> (true?, string?, number?),
+    preview_font: (family: string?) -> (true?, string?, number?),
+    preview_font_style: (face: FontFace, style: string) -> (true?, string?, number?),
+    set_font: (family: string) -> (true?, string?, number?),
     add_menu_item: (item: MenuItem) -> (true?, string?, number?),
     run_command: (name: string, args: { [string]: Value }?) -> (true?, string?, number?),
     clipboard_text: () -> (string?, string?, number?),
@@ -35,7 +48,9 @@ export type Cx = {
     set_clipboard_image: (png: string | buffer) -> (true?, string?, number?),
     keep_awake: (awake: Awake) -> (true?, string?, number?),
     save_file: (window: WindowId?, name: string, bytes: string | buffer) -> (number?, string?, number?),
+    notify: (text: string, level: NoticeLevel?, title: string?) -> (true?, string?, number?),
     packages: (call: Packages) -> (number?, string?, number?),
+    show_page: (page: string) -> (true?, string?, number?),
     cancel_packages: (job: number) -> (true?, string?, number?),
     focused_window: () -> (WindowId?, string?, number?),
     focused_pane: () -> (PaneId?, string?, number?),
@@ -66,6 +81,7 @@ export type Cx = {
     mark_gutter: (pane: PaneId, row: number, color: { number }) -> (number?, string?, number?),
     unmark_gutter: (pane: PaneId, id: number) -> (true?, string?, number?),
     open: (target: string) -> (true?, string?, number?),
+    open_at: (target: string, line: number, column: number?) -> (true?, string?, number?),
     opens: (target: string) -> (boolean?, string?, number?),
     select_all: (pane: PaneId) -> (true?, string?, number?),
     clear_scrollback: (pane: PaneId) -> (true?, string?, number?),
@@ -143,6 +159,8 @@ export type Event =
     | { kind: "lines", id: number, pane: PaneId, lines: { Line }, complete: boolean }
     | { kind: "searched", id: number, pane: PaneId, matches: { SearchMatch }, count: number, done: boolean }
     | { kind: "panel-closed", id: PanelId }
+    | { kind: "page-shown", page: string }
+    | { kind: "page-hidden", page: string }
     | { kind: "keys-changed" }
     | { kind: "window-focus", window: WindowId, focused: boolean }
     | { kind: "viewport-changed", pane: PaneId, viewport: Viewport }
@@ -153,6 +171,9 @@ export type Event =
     | { kind: "saved", id: number, path: string?, error: string? }
     | { kind: "package", id: number, line: Data }
     | { kind: "packages-ended", id: number, ok: boolean }
+    | { kind: "plugins-changed" }
+    | { kind: "settings-changed" }
+    | { kind: "themes-changed" }
     | { kind: "config-changed" }
     | { kind: "timer", id: number }
     | { kind: "custom", name: string, schema: string, value: Data }
@@ -182,9 +203,12 @@ export type UiEvent =
     | { view: ViewId, key: string, kind: "select", item: number }
     | { view: ViewId, key: string, kind: "activate", item: number }
     | { view: ViewId, key: string, kind: "list-range", first: number, count: number }
+    | { view: ViewId, key: string, kind: "cut", cut: boolean }
+    | { view: ViewId, key: string, kind: "step", up: boolean }
+    | { view: ViewId, key: string, kind: "recorded", keys: any? }
 
 export type Node = {
-    kind: "container" | "text" | "icon" | "spacer" | "field" | "button" | "toggle" | "separator" | "list" | "scroll" | "progress" | "tabs" | "image",
+    kind: "container" | "text" | "icon" | "spacer" | "field" | "button" | "toggle" | "separator" | "list" | "scroll" | "progress" | "tabs" | "image" | "theme-preview",
     key: Key?,
     layout: NodeLayout?,
     style: Style?,
@@ -198,7 +222,10 @@ export type Node = {
     text: string?,
     icon: string?,
     placeholder: string?,
+    stepped: boolean?,
+    records: boolean?,
     disabled: boolean?,
+    link: boolean?,
     on: boolean?,
     row: Node?,
     count: number?,
@@ -211,6 +238,7 @@ export type Node = {
     chosen: number?,
     distribution: Distribution?,
     image: number?,
+    theme: string?,
 }
 export type View = Node
 
@@ -281,6 +309,9 @@ export type TestHost = {
     kept_images: () -> { number },
     -- What the plugin keeps from idle sleep.
     awake: () -> Awake,
+    -- The notices that the plugin showed, in their order, the last the one
+    -- that shows, each of its title or the plugin's namespace.
+    notices: () -> { { level: NoticeLevel, title: string, text: string } },
     -- The focused window, and the tab that it shows.
     window: () -> WindowId,
     tab: () -> TabId,
@@ -294,10 +325,21 @@ export type TestHost = {
     menu_items: () -> { MenuItem },
 }
 
+export type AgentInfo = {
+    pane: PaneId,
+    tab: TabId,
+    window: WindowId,
+    name: string,
+    state: AgentState?,
+    message: string?,
+    since: number?,
+}
+
 export type AgentState =
     | "working"
     | "waiting"
     | "done"
+    | "error"
 
 export type Align =
     | "start"
@@ -313,6 +355,7 @@ export type Anchor =
     | { pane_corner: { pane: PaneId, corner: Corner } }
     | { pane_top: PaneId }
     | { window_corner: { window: WindowId, corner: Corner } }
+    | { view_window: { view: ViewId, corner: Corner } }
 
 export type Awake =
     | "off"
@@ -338,6 +381,11 @@ export type Binding = {
 export type Border = {
     color: Token,
     width: number,
+}
+
+export type CapabilityDecision = {
+    capability: string,
+    decision: Decision,
 }
 
 export type Category =
@@ -380,17 +428,29 @@ export type CommandInfo = {
     enabled: boolean?,
 }
 
+export type ConfigProblem = {
+    message: string,
+    line: number?,
+    column: number?,
+}
+
 export type Corner =
     | "top-left"
     | "top-right"
     | "bottom-left"
     | "bottom-right"
     | "top"
+    | "center"
 
 export type Current = {
     current: { any }?,
     kept: number,
 }
+
+export type Decision =
+    | "granted"
+    | "refused"
+    | "undecided"
 
 export type DecorationLook = {
     underline: Underline?,
@@ -428,6 +488,12 @@ export type Edges = {
     left: number?,
 }
 
+export type FontFace =
+    | "regular"
+    | "bold"
+    | "italic"
+    | "bold-italic"
+
 export type FontFamily =
     | "interface"
     | "terminal"
@@ -439,6 +505,12 @@ export type FontWeight =
     | "semibold"
     | "bold"
     | "heavy"
+
+export type Fonts = {
+    current: string,
+    families: { string },
+    all: { string }?,
+}
 
 export type Found = {
     matches: { SearchMatch },
@@ -548,6 +620,7 @@ export type NodeLayout = {
     height: Length?,
     min_width: Length?,
     grow: number?,
+    lines: number?,
 }
 
 export type NodeRole =
@@ -557,6 +630,12 @@ export type NodeRole =
     | "alert"
     | "heading"
     | "image"
+
+export type NoticeLevel =
+    | "info"
+    | "success"
+    | "warning"
+    | "error"
 
 export type Packages =
     | "list"
@@ -576,6 +655,7 @@ export type PanelOptions = {
     close_outside: boolean?,
     close_escape: boolean?,
     takes_keys: boolean?,
+    close_typing: boolean?,
 }
 
 export type PanelRole =
@@ -595,6 +675,23 @@ export type ParamKind =
     | "integer"
     | "number"
     | "boolean"
+
+export type PluginInfo = {
+    name: string,
+    namespace: string,
+    version: string?,
+    description: string?,
+    built_in: boolean,
+    state: PluginState,
+    fault: string?,
+    capabilities: { CapabilityDecision }?,
+}
+
+export type PluginState =
+    | "waiting"
+    | "active"
+    | "off"
+    | "faulted"
 
 export type PointerShape =
     | "arrow"
@@ -687,6 +784,50 @@ export type SelectionKind =
     | "lines"
     | "block"
 
+export type SettingBinding = {
+    keys: string,
+    command: string?,
+    title: string?,
+    category: Category?,
+    args: { [string]: Value }?,
+    when: string?,
+    detailed: boolean?,
+    default: boolean?,
+    system: boolean?,
+}
+
+export type SettingKey = {
+    name: string,
+    description: string?,
+    platforms: { string }?,
+    kind: SettingKind,
+    control: string?,
+    default: Data?,
+    value: Data?,
+    guide: string?,
+}
+
+export type SettingKind =
+    | "boolean"
+    | { number: { minimum: number?, maximum: number?, step: number?, integer: boolean? } }
+    | { text: { min_length: number?, max_length: number?, examples: { string }? } }
+    | { choice: { choices: { Data } } }
+    | { list: { max_length: number? } }
+    | "other"
+
+export type Settings = {
+    sections: { SettingsSection },
+    keys: { SettingBinding }?,
+    error: ConfigProblem?,
+}
+
+export type SettingsSection = {
+    name: string,
+    plugin: string?,
+    description: string?,
+    keys: { SettingKey },
+}
+
 export type Shadow = {
     color: Token?,
     x: number?,
@@ -746,6 +887,7 @@ export type TabId = number
 export type TabInfo = {
     id: TabId,
     window: WindowId,
+    kind: TabKind?,
     title: string,
     color: Color?,
     active: boolean,
@@ -760,7 +902,12 @@ export type TabInfo = {
     alternate: boolean?,
     secure: boolean?,
     agent: AgentState?,
+    agent_message: string?,
 }
+
+export type TabKind =
+    | "terminal"
+    | "settings"
 
 export type TabProgress = {
     state: ProgressState,
@@ -806,6 +953,7 @@ export type Themes = {
     appearance: ThemeVariant,
     current: string,
     themes: { ThemeInfo },
+    loading: boolean?,
 }
 
 export type Token = string
@@ -829,6 +977,7 @@ export type ViewId =
     | { pane_header: PaneId }
     | { title_buttons: WindowId }
     | { panel: PanelId }
+    | { page: string }
 
 export type Viewport = {
     top: number,
@@ -848,6 +997,7 @@ export type WindowInfo = {
     number: number?,
     keys: string?,
     bell: boolean?,
+    title: string?,
     quick: boolean?,
     hidden: boolean?,
 }

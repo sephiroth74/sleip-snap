@@ -29,7 +29,30 @@ function test.the_screen_s_snap_copies_its_image_of_the_default_action(host: Tes
     local png = assert(host.clipboard_image())
     assert(string.sub(png, 2, 4) == "PNG")
     assert(#host.saves() == 0, "a copy saves nothing")
-    assert(#host.panels() == 0 and #host.kept_images() == 0, "no preview")
+    assert(#host.kept_images() == 0, "no preview")
+end
+
+function test.a_copy_tells_it_in_a_notice(host: TestHost)
+    host.activate()
+    host.set_screen({ row("x") })
+    host.command("snap.screen")
+    local notices = host.notices()
+    assert(#notices == 1, "one notice")
+    assert(notices[1].level == "success" and notices[1].text == "Snap copied to clipboard")
+end
+
+function test.a_save_tells_it_once_written_and_nothing_of_a_cancel(host: TestHost)
+    host.set_config({ action = "save" })
+    host.activate()
+    host.set_screen({ row("x") })
+    host.command("snap.screen")
+    assert(#host.notices() == 0, "nothing before the file is written")
+    host.answer_save(host.saves()[1].id, nil)
+    assert(#host.notices() == 0, "a cancel tells nothing")
+    host.command("snap.screen")
+    host.answer_save(host.saves()[1].id, "/Users/me/Desktop/Snap.png")
+    local notices = host.notices()
+    assert(#notices == 1 and notices[1].level == "success" and notices[1].text == "Snap saved to file")
 end
 
 function test.the_selection_s_snap_takes_its_cells(host: TestHost)

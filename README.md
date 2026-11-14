@@ -10,10 +10,13 @@ code-snippet tools make of code.
 - **Snap the Selection** (`snap.selection`) and **Snap the Screen**
   (`snap.screen`), from the command palette (⇧⌘P) or keys of your own:
   the image of the text, in your theme's colors and your terminal's font,
-  is copied, saved through the save panel, or both, as `action` says.
+  is copied, saved through the save panel, or both, as `action` says, a
+  notice telling it once done, or why a save failed.
 - The window's parts, its background and its size are the config's.
 
 ## Install
+
+Of Lokyr 1.1 or later, of the plugin API 0.1.3:
 
 ```sh
 sleip add sephiroth74/snap
